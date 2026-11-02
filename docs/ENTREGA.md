@@ -23,7 +23,7 @@ RH, gestor e funcionário; cadastros; vínculo; empresa; admissão por convite; 
 - Publicação: não há URL pública ou serviço de hospedagem provisionado.
 - Arquivos: armazenamento privado no filesystem; precisa de volume persistente/backup ou adaptação ao Storage antes de uma implantação apropriada.
 - E-mail/WhatsApp e assinatura: não conectados; os convites são gerados para compartilhamento manual.
-- GitHub: código local; verificar estado do envio antes de afirmar que está remoto.
+- GitHub: primeira implementação enviada à branch main de dudaedific-lab/ELOZIA. Isso publica o código, não o aplicativo. O resultado do GitHub Actions ainda não foi consultado.
 
 ## Lacunas para produção
 

@@ -5,7 +5,7 @@ Data: 02/11/2026. Entrega executável local, não implantação pública.
 ## Evidências
 
 - Build TypeScript/Vite executado.
-- 27 testes aprovados da API e da migration PostgreSQL com banco local.
+- 33 testes aprovados da API e da migration PostgreSQL com banco local.
 - Nove fluxos completos no Chromium, incluindo layout móvel e zero erros JavaScript no último run concluído.
 - Auditoria npm de produção: zero vulnerabilidades reportadas na consulta desta entrega.
 - Persistência local e acesso privado a arquivos. A configuração real do Supabase ainda não foi validada.
@@ -21,7 +21,7 @@ RH, gestor e funcionário; cadastros; vínculo; empresa; admissão por convite; 
 - PostgreSQL do Supabase: código/migration preparados, sem credenciais de conexão nesta sessão.
 - IA externa: adaptador implementado; sem chave, opera e se identifica como resumo por regras. Não houve teste de chamada a provedor real.
 - Publicação: não há URL pública ou serviço de hospedagem provisionado.
-- Arquivos: armazenamento privado no filesystem; precisa de volume persistente/backup ou adaptação ao Storage antes de uma implantação apropriada.
+- Arquivos: adaptador Supabase Storage privado implementado e testado com transporte simulado; conexão real ainda pendente. Filesystem permanece para desenvolvimento local.
 - E-mail/WhatsApp e assinatura: não conectados; os convites são gerados para compartilhamento manual.
 - GitHub: primeira implementação enviada à branch main de dudaedific-lab/ELOZIA. Isso publica o código, não o aplicativo. O resultado do GitHub Actions ainda não foi consultado.
 
@@ -46,3 +46,7 @@ Permissões nesta versão: RH por empresa, gestor por departamento, funcionário
 Dockerfile de implantação preparado, mas imagem não foi construída nem implantada nesta sessão. Exige DATABASE_URL do projeto Elozia, migration aplicada, volume persistente em /data, HTTPS na borda e os controles pendentes acima. O ponto continua de teste mesmo em uma imagem de produção.
 
 Instalação limpa pelo package-lock (`npm ci`) e build foram exercitados. O Dockerfile não foi construído.
+
+## Adaptação Vercel
+
+Função Node, rewrites, preparação do banco no build e Storage privado implementados. Consulte VERCEL.md. A conta Vercel, a conexão PostgreSQL e a chave de serviço não estão disponíveis nesta sessão; não foi criado ou verificado um endereço público.

@@ -1,6 +1,7 @@
 import http from "node:http";
+import { createStorage } from "./storage.mjs";
 import { randomBytes } from "node:crypto";
-import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { root } from "./db.mjs";
 import {
@@ -34,15 +35,29 @@ const json = (res, status, data) => {
   res.end(JSON.stringify(data));
 };
 async function body(req) {
+  if (req.body !== undefined) {
+    const raw =
+      typeof req.body === "string"
+        ? req.body
+        : Buffer.isBuffer(req.body)
+          ? req.body.toString()
+          : JSON.stringify(req.body);
+    assert(
+      Buffer.byteLength(raw) <= 3 * 1024 * 1024,
+      "Arquivo ou requisição muito grande.",
+      413,
+    );
+    try {
+      return JSON.parse(raw);
+    } catch {
+      assert(false, "Formato da requisição inválido.");
+    }
+  }
   const chunks = [];
   let size = 0;
   for await (const c of req) {
     size += c.length;
-    assert(
-      size <= 12 * 1024 * 1024,
-      "Arquivo ou requisição muito grande.",
-      413,
-    );
+    assert(size <= 3 * 1024 * 1024, "Arquivo ou requisição muito grande.", 413);
     chunks.push(c);
   }
   try {
@@ -83,8 +98,10 @@ export function createApp(
   {
     files = process.env.FILES_DIRECTORY ?? path.join(root, ".data", "files"),
     dist = path.join(root, "dist"),
+    storage,
   } = {},
 ) {
+  const privateFiles = storage ?? createStorage(files);
   const allowedEmployee = async (user, employeeId) => {
     const e = (
       await db.query("SELECT * FROM employees WHERE id=? AND company_id=?", [
@@ -382,8 +399,8 @@ export function createApp(
             );
             const bytes = Buffer.from(file.content, "base64");
             assert(
-              bytes.length > 0 && bytes.length <= 3 * 1024 * 1024,
-              "Cada arquivo deve ter até 3 MB.",
+              bytes.length > 0 && bytes.length <= 2 * 1024 * 1024,
+              "Cada arquivo deve ter até 2 MB.",
             );
             if (mime === "application/pdf")
               assert(
@@ -401,12 +418,13 @@ export function createApp(
               assert(bytes[0] === 255 && bytes[1] === 216, "JPEG inválido.");
             return { filename, mime, bytes, key: id(), document: id() };
           });
-          await mkdir(files, { recursive: true });
+          assert(
+            attachments.reduce((total, f) => total + f.bytes.length, 0) <=
+              2 * 1024 * 1024,
+            "Os documentos devem somar no máximo 2 MB.",
+          );
           for (const f of attachments)
-            await writeFile(path.join(files, f.key), f.bytes, {
-              mode: 0o600,
-              flag: "wx",
-            });
+            await privateFiles.put(f.key, f.bytes, f.mime);
           await db.transaction(async () => {
             await db.execute(
               "DELETE FROM admission_submissions WHERE admission_id=? AND company_id=?",
@@ -946,8 +964,8 @@ export function createApp(
           );
           const bytes = Buffer.from(input.content, "base64");
           assert(
-            bytes.length > 0 && bytes.length <= 8 * 1024 * 1024,
-            "Envie um arquivo de até 8 MB.",
+            bytes.length > 0 && bytes.length <= 2 * 1024 * 1024,
+            "Envie um arquivo de até 2 MB.",
           );
           if (mime === "application/pdf")
             assert(
@@ -974,11 +992,7 @@ export function createApp(
             );
           const documentId = id(),
             storageKey = id();
-          await mkdir(files, { recursive: true });
-          await writeFile(path.join(files, storageKey), bytes, {
-            mode: 0o600,
-            flag: "wx",
-          });
+          await privateFiles.put(storageKey, bytes, mime);
           await db.transaction(async () => {
             await db.execute(
               "INSERT INTO documents(id,company_id,employee_id,title,category,file_name,mime_type,size_bytes,content_hash,storage_key,expires_at,competence,status,uploaded_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -1061,7 +1075,7 @@ export function createApp(
             "Documento não disponível para este acesso.",
             403,
           );
-          const bytes = await readFile(path.join(files, d.storage_key));
+          const bytes = await privateFiles.get(d.storage_key);
           await db.execute(
             "INSERT INTO document_reads(document_id,user_id,read_at) VALUES(?,?,?) ON CONFLICT(document_id,user_id) DO NOTHING",
             [d.id, user.id, now()],

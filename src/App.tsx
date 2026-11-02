@@ -2529,8 +2529,8 @@ function DocumentForm({
       onClose={onClose}
       onSubmit={async (f) => {
         if (!file) throw new Error("Selecione um arquivo.");
-        if (file.size > 8 * 1024 * 1024)
-          throw new Error("O arquivo deve ter até 8 MB.");
+        if (file.size > 2 * 1024 * 1024)
+          throw new Error("O arquivo deve ter até 2 MB.");
         const content = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result).split(",")[1]);
@@ -2595,7 +2595,7 @@ function DocumentForm({
       <label className="upload-zone">
         <Upload size={26} />
         <strong>{file ? file.name : "Escolha um arquivo"}</strong>
-        <span>PDF, JPG, PNG ou texto · até 8 MB</span>
+        <span>PDF, JPG, PNG ou texto · até 2 MB</span>
         <input
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.txt,.csv"
@@ -3185,10 +3185,11 @@ function Invitation({ token, onExit }: { token: string; onExit: () => void }) {
                   throw new Error("Escolha pelo menos um documento.");
                 if (
                   files.length > 3 ||
-                  files.some((file) => file.size > 3 * 1024 * 1024)
+                  files.reduce((total, file) => total + file.size, 0) >
+                    2 * 1024 * 1024
                 )
                   throw new Error(
-                    "Envie até três arquivos, com no máximo 3 MB cada.",
+                    "Envie até três arquivos, somando no máximo 2 MB.",
                   );
                 const attachments = await Promise.all(
                   files.map(async (file) => {
@@ -3252,7 +3253,7 @@ function Invitation({ token, onExit }: { token: string; onExit: () => void }) {
                     ? files.map((f) => f.name).join(", ")
                     : "Selecionar documentos"}
                 </strong>
-                <span>Até 3 arquivos · PDF, PNG ou JPG · 3 MB cada</span>
+                <span>Até 3 arquivos · PDF, PNG ou JPG · 2 MB no total</span>
                 <input
                   type="file"
                   accept=".pdf,.png,.jpg,.jpeg"

@@ -18,12 +18,26 @@ export class Store {
   async open() {
     if (this.url) {
       const { Client } = await import("pg");
+      const connection = new URL(this.url);
+      for (const parameter of ["sslmode", "sslcert", "sslkey", "sslrootcert"])
+        connection.searchParams.delete(parameter);
       this.db = new Client({
-        connectionString: this.url,
-        options: "-c search_path=elozia",
-        ssl: { rejectUnauthorized: true },
+        connectionString: connection.toString(),
+        ssl: {
+          rejectUnauthorized: true,
+          ...(process.env.SUPABASE_DB_CA
+            ? { ca: process.env.SUPABASE_DB_CA.replace(/\\n/g, "\n") }
+            : {}),
+        },
+        connectionTimeoutMillis: 10000,
+        query_timeout: 20000,
+        keepAlive: true,
+      });
+      this.db.on("error", (error) => {
+        this.connectionError = error;
       });
       await this.db.connect();
+      await this.db.query("SET search_path TO elozia");
     } else {
       await mkdir(path.dirname(this.file), { recursive: true });
       this.db = new DatabaseSync(this.file);

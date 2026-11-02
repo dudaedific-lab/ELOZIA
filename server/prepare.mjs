@@ -1,3 +1,4 @@
+import { SupabaseStorage } from "./storage.mjs";
 import { Store } from "./db.mjs";
 import { readFile } from "node:fs/promises";
 const expected = "skgdyvjhbxotiqgflzke";
@@ -21,6 +22,8 @@ try {
       "utf8",
     ),
   );
+  if (process.env.STORAGE_DRIVER === "supabase")
+    await new SupabaseStorage().prepare();
   console.log(
     "Schema Elozia preparado. Nenhum dado de demonstração remoto criado.",
   );

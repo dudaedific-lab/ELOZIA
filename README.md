@@ -47,6 +47,10 @@ A criação dessas contas só acontece no banco local, fora de produção. Use `
 - Assistente com resumo por regras. Com um provedor configurado, respostas por IA usam totais autorizados, sem acesso de escrita e sem envio de arquivos.
 - Histórico de atividades e layout responsivo.
 
+## Publicação na Vercel
+
+A adaptação serverless e o armazenamento privado no Supabase estão preparados. Siga [o passo a passo de publicação](docs/VERCEL.md). O acesso à conta Vercel e as credenciais do banco/Storage ainda precisam ser configurados. Não há deployment externo confirmado.
+
 ## Supabase da Elozia
 
 Projeto: `skgdyvjhbxotiqgflzke`. Este repositório contém uma migration **ainda não aplicada ao projeto remoto**.
@@ -61,7 +65,7 @@ A arquitetura atual usa um backend Node para autenticação e autorização; nã
 
 TLS é verificado. Se o provedor exigir uma CA, configure a cadeia de confiança; não desative a verificação. A rede do ambiente também precisa permitir o host/porta reais do pooler. A conexão remota não foi validada nesta entrega por ausência de credenciais/rede TCP configuradas.
 
-Uploads usam diretório privado local, inclusive no modo PostgreSQL. Uma implantação necessita volume persistente com backup ou um adaptador de armazenamento privado; não hospede em filesystem efêmero. Defina `FILES_DIRECTORY` no servidor. O banco remoto sozinho não migra arquivos locais.
+Uploads usam diretório privado local por padrão. Na Vercel, configure `STORAGE_DRIVER=supabase`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`: o adaptador mantém os objetos no bucket privado `elozia-documents`. Em servidor persistente, a alternativa local exige volume e backup. O banco remoto sozinho não migra arquivos locais. Limite de upload: 2 MB; convites aceitam até três arquivos somando 2 MB.
 
 ## IA opcional
 

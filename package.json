@@ -9,10 +9,11 @@
     "start": "node --use-env-proxy --env-file-if-exists=.env server/index.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:e2e": "node tests/e2e.mjs",
-    "db:prepare": "node --use-env-proxy --env-file-if-exists=.env server/prepare.mjs"
+    "db:prepare": "node --use-env-proxy --env-file-if-exists=.env server/prepare.mjs",
+    "vercel:build": "npm run build && npm run db:prepare"
   },
   "engines": {
-    "node": ">=24.5.0"
+    "node": "24.x"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
